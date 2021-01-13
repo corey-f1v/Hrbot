@@ -115,6 +115,7 @@ app.event("app_mention", async ({ event }) => {
           publishTestMessage(`You have ${sickDays} sick day(s) remaining`);
         } else if (text.includes("set")) {
           createSickDayEvent(username, auth);
+          setSickOrVacation({ username, sickOrVacation: 's', auth })
           publishTestMessage("Your sick day has been set");
         } else {
           publishTestMessage(
@@ -129,6 +130,7 @@ app.event("app_mention", async ({ event }) => {
           );
         } else if (text.includes("set")) {
           createVacationDayEvent(username, auth);
+          setSickOrVacation({ username, sickOrVacation: '1', auth })
           publishTestMessage("Your vacation day has been set");
         } else {
           publishTestMessage(

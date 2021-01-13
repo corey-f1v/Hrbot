@@ -34,7 +34,54 @@ async function getVacationDays(username, auth) {
 	return totalVacationDays - row[4]
 }
 
+function columnToLetter(column)
+{
+  var temp, letter = '';
+  while (column > 0)
+  {
+    temp = (column - 1) % 26;
+    letter = String.fromCharCode(temp + 65) + letter;
+    column = (column - temp - 1) / 26;
+  }
+  return letter;
+}
+
+async function setSickOrVacation({ spreadSheetTab, username, sickOrVacation, auth } = {}) {
+  const [day, month, date, year] = new Date().toDateString().split(' ');
+  const sheets = google.sheets({ version: 'v4', auth });
+  let userRow, dateColumn;
+  const customRange = spreadSheetTab ? spreadSheetTab : month;
+
+  const userRows = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId,
+    range: `${customRange}!A1:A`, // selects full column
+  });
+  userRows.data.values.forEach((row, i) => {
+    if (row[0] === username) {
+      userRow = i + 1;
+    }
+  });
+
+  const dateColumns = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId,
+    range: `${customRange}!2:2`, // selects full row
+  });
+  dateColumns.data.values[0].forEach((column, i) => {
+    if (column === date) {
+      dateColumn = columnToLetter(i+1);
+    }
+  });
+
+  const res = await sheets.spreadsheets.values.update({
+    spreadsheetId: spreadsheetId,
+    range: `${customRange}!${dateColumn + userRow}`, // selects targeted cell
+    valueInputOption: 'USER_ENTERED',
+    resource: { values: [[sickOrVacation]] },
+  });
+}
+
 module.exports = {
 	getSickDays,
-	getVacationDays
+	getVacationDays,
+	setSickOrVacation
 }
