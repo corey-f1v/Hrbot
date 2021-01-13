@@ -40,7 +40,7 @@ async function requestPaymo(username, pub) {
 					JSON.parse(body).tasks.forEach(task => {
 						if (task.name.includes(username)) {
 							pub(
-								`Project: ${project.name} - ${task.name} - taskId: *${task.id}*`
+								`Project: ${project.name} - ${task.name} - taskId: ${task.id}`
 							);
 						}
 					});

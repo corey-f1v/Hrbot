@@ -117,7 +117,6 @@ app.event("app_mention", async ({
       "tea",
       "time",
       "paymo",
-      "timesheet",
       "help",
       "who"
     ];
@@ -170,6 +169,7 @@ app.event("app_mention", async ({
         publishTestMessage("poke");
       } else if (word == "paymo") {
         if (text.includes("timesheet")) {
+          console.log('here');
           const taskId = text.toLowerCase().substring(text.indexOf("|") + 2);
           requestTimesheet(username, taskId, publishTestMessage);
         } else if (text.includes("tasks")) {
