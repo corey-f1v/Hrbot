@@ -3,9 +3,22 @@ const { WebClient } = require("@slack/web-api");
 const { google } = require("googleapis");
 const { _ } = require("lodash");
 const request = require("request");
-const { requestPaymo, requestHours, requestTimesheet } = require("./paymo");
-const { getSickDays, getVacationDays } = require("./gSheet");
-const { createSickDayEvent, createVacationDayEvent } = require("./gCal");
+const {
+  requestPaymo,
+  requestHours,
+  requestTimesheet
+} = require("./paymo");
+const {
+  getSickDays,
+  getVacationDays
+} = require("./gSheet");
+const {
+  createSickDayEvent,
+  createVacationDayEvent,
+  createManyVacationDayEvent,
+  createManySickDayEvent,
+  getDate,
+} = require("./gCal");
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -114,9 +127,27 @@ app.event("app_mention", async ({ event }) => {
           console.log("sick", sickDays);
           publishTestMessage(`You have ${sickDays} sick day(s) remaining`);
         } else if (text.includes("set")) {
-          createSickDayEvent(username, auth);
-          setSickOrVacation({ username, sickOrVacation: 's', auth })
-          publishTestMessage("Your sick day has been set");
+          if (spl.length == 3) {
+            const date = getDate();
+            await createSickDayEvent(username, date, auth);
+            setSickOrVacation({
+              username,
+              sickOrVacation: 's',
+              auth
+            })
+            publishTestMessage("Your sick day has been set");
+          } else {
+            var parts = spl[4].split("-");
+            var addEnd = parseInt(parts[2]) + 1;
+            var end = parts[0] + "-" + parts[1] + "-" + addEnd;
+            await createManySickDayEvent(username, spl[3], end, auth);
+            setSickOrVacation({
+              username,
+              sickOrVacation: 's',
+              auth
+            })
+            publishTestMessage("Sick days set");
+          }
         } else {
           publishTestMessage(
             "You can see how many sick days you have left or set a sick day by asking me"
@@ -129,9 +160,28 @@ app.event("app_mention", async ({ event }) => {
             `You have ${vacationDays} vacation day(s) remaining`
           );
         } else if (text.includes("set")) {
-          createVacationDayEvent(username, auth);
-          setSickOrVacation({ username, sickOrVacation: '1', auth })
-          publishTestMessage("Your vacation day has been set");
+          const spl = text.split(" ");
+          if (spl.length == 3) {
+            const date = getDate();
+            await createVacationDayEvent(username, date, auth);
+            setSickOrVacation({
+              username,
+              sickOrVacation: '1',
+              auth
+            })
+            publishTestMessage("Your vacation day has been set");
+          } else {
+            var parts = spl[4].split("-");
+            var addEnd = parseInt(parts[2]) + 1;
+            var end = parts[0] + "-" + parts[1] + "-" + addEnd;
+            await createManyVacationDayEvent(username, spl[3], end, auth);
+            setSickOrVacation({
+              username,
+              sickOrVacation: '1',
+              auth
+            })
+            publishTestMessage("Vacation days set");
+          }
         } else {
           publishTestMessage(
             "You can see how many vacation days you have left or set a vacation day by asking me"
