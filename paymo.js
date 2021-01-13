@@ -6,7 +6,7 @@ const request = require("request");
 // 	token: process.env.SLACK_BOT_TOKEN
 // });
 const paymoProjectUrl = "https://app.paymoapp.com/api/projects";
-const paymoTaskUrl = "https: //app.paymoapp.com/api/tasks";
+const paymoTaskUrl = "https://app.paymoapp.com/api/tasks";
 const apiKey = process.env.PAYMO_API_KEY;
 const authObj = {
 	auth: {
@@ -17,7 +17,6 @@ const authObj = {
 	}
 };
 
-
 let todayDate = new Date();
 const dd = String(todayDate.getDate()).padStart(2, "0");
 const mm = String(todayDate.getMonth() + 1).padStart(2, "0"); //January is 0!
@@ -25,31 +24,31 @@ const yyyy = todayDate.getFullYear();
 todayDate = `${yyyy}-${mm}-${dd}`;
 
 async function requestPaymo(username, pub) {
-	request.get(
-		paymoProjectUrl, authObj,
-		(error, response, body) => {
-			if (error) {
-				console.log(`Error in paymo request. Error: ${error}`);
-			}
-			JSON.parse(body).projects.forEach(project => {
-				request.get(
-					`${paymoTaskUrl}?where=project_id=${project.id}`, authObj,
-					(error, response, body) => {
-						if (error) {
-							console.log(error);
-						}
-						console.log('tasks', JSON.parse(body).tasks);
-						JSON.parse(body).tasks.forEach(task => {
-							if (task.name.includes(username)) {
-								pub(`Project: ${project.name} - ${task.name} - taskId: *${task.id}*`);
-							}
-						});
-					}
-				);
-			});
+	request.get(paymoProjectUrl, authObj, (error, response, body) => {
+		if (error) {
+			console.log(`Error in paymo request. Error: ${error}`);
 		}
-	)
-};
+		JSON.parse(body).projects.forEach(project => {
+			request.get(
+				`${paymoTaskUrl}?where=project_id=${project.id}`,
+				authObj,
+				(error, response, body) => {
+					if (error) {
+						console.log(error);
+					}
+					console.log("tasks", JSON.parse(body).tasks);
+					JSON.parse(body).tasks.forEach(task => {
+						if (task.name.includes(username)) {
+							pub(
+								`Project: ${project.name} - ${task.name} - taskId: *${task.id}*`
+							);
+						}
+					});
+				}
+			);
+		});
+	});
+}
 
 function requestHours(task_id, pub) {
 	const postData = {
@@ -104,10 +103,14 @@ async function requestTimesheet(username, task_id, pub) {
 		},
 		(error, response, body) => {
 			if (error) {
-				console.log(`There is an error with your timesheet request. Error: ${error}`);
+				console.log(
+					`There is an error with your timesheet request. Error: ${error}`
+				);
 			}
 			console.log("Hours response: ", JSON.parse(body));
-			JSON.parse(body).message ? pub(`${JSON.parse(body).message}`) : pub(`${JSON.parse(body).entries[0].description}`);
+			JSON.parse(body).message ?
+				pub(`${JSON.parse(body).message}`) :
+				pub(`${JSON.parse(body).entries[0].description}`);
 		}
 	);
 }
